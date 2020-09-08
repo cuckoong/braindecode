@@ -18,7 +18,7 @@ from ..datasets.base import WindowsDataset, BaseConcatDataset
 def create_windows_from_events(
         concat_ds, trial_start_offset_samples, trial_stop_offset_samples,
         window_size_samples=None, window_stride_samples=None,
-        drop_last_window=False,
+        drop_last_window=False, duration = None,
         mapping=None, preload=False, drop_bad_windows=True):
     """Windower that creates windows based on events in mne.Raw.
 
@@ -87,9 +87,12 @@ def create_windows_from_events(
 
         events, events_id = mne.events_from_annotations(ds.raw, mapping)
         onsets = events[:, 0]
-        filtered_durations = np.array(
-            [a['duration'] for a in ds.raw.annotations if a['description'] in events_id]
-        )
+        if duration is None:
+                filtered_durations = np.array(
+                        [a['duration'] for a in ds.raw.annotations if a['description'] in events_id])
+        else:
+                filtered_durations = np.array([duration for a in ds.raw.annotations if a['description'] in events_id])
+                
         stops = onsets + (filtered_durations * ds.raw.info['sfreq']).astype(int)
 
         if stops[-1] + trial_stop_offset_samples > len(ds):
